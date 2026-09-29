@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  SALES_MANAGER
+  SERVICE_TECHNICIAN
+  ACCOUNTANT
+  INVENTORY_MANAGER
+}
+
+enum InvoiceType {
+  SALES
+  PURCHASE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum OCRStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  customers     Customer[]
+  vendors       Vendor[]
+  products      Product[]
+  invoices      Invoice[]
+  serviceTickets ServiceTicket[]
+  auditLogs     AuditLog[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(SALES_MANAGER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  auditLogs AuditLog[]
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  gstin     String?
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Vendor {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  gstin     String?
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  sku         String
+  name        String
+  category    String
+  itemType    String
+  buyingPrice Float    @default(0)
+  sellingPrice Float   @default(0)
+  stockQty    Int      @default(0)
+  warehouse   String   @default("Main Warehouse")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, sku])
+}
+
+model LedgerAccount {
+  id          String   @id @default(cuid())
+  tenantId    String
+  code        String
+  name        String
+  accountType String
+  isBank      Boolean  @default(false)
+  isCash      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@unique([tenantId, code])
+}
+
+model LedgerEntry {
+  id           String   @id @default(cuid())
+  tenantId     String
+  accountCode  String
+  debit        Float    @default(0)
+  credit       Float    @default(0)
+  description  String?
+  documentType String?
+  documentId   String?
+  createdAt    DateTime @default(now())
+}
+
+model Invoice {
+  id            String       @id @default(cuid())
+  tenantId      String
+  tenant        Tenant       @relation(fields: [tenantId], references: [id])
+  invoiceType   InvoiceType
+  invoiceNumber String
+  customerName  String?
+  vendorName    String?
+  invoiceDate   DateTime
+  taxableValue  Float        @default(0)
+  gstValue      Float        @default(0)
+  total         Float        @default(0)
+  status        InvoiceStatus @default(DRAFT)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([tenantId, invoiceNumber])
+}
+
+model ServiceTicket {
+  id           String       @id @default(cuid())
+  tenantId     String
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  ticketNumber String       @unique
+  customerName String
+  siteAddress  String
+  issueSummary String
+  priority     TicketPriority @default(MEDIUM)
+  status       TicketStatus   @default(OPEN)
+  engineerName String       @default("Unassigned")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model OCRInvoiceDraft {
+  id            String      @id @default(cuid())
+  tenantId      String
+  source        String      @default("camera-upload")
+  vendorName    String
+  gstin         String?
+  invoiceNumber String
+  invoiceDate   DateTime
+  taxableValue  Float       @default(0)
+  gstAmount     Float       @default(0)
+  total         Float       @default(0)
+  status        OCRStatus   @default(PENDING_REVIEW)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([tenantId, invoiceNumber])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  userId    String?
+  userEmail String?
+  action    String
+  entity    String
+  details   String
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
