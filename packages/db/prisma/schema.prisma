@@ -1,6 +1,3 @@
-# Prisma schema starter for AV ERP
-
-```prisma
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -17,54 +14,56 @@ model Tenant {
   users     User[]
   customers Customer[]
   vendors   Vendor[]
+  invoices  Invoice[]
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String
-  role        String
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      String
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model Customer {
-  id          String   @id @default(cuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  name        String
-  gstin       String?
-  phone       String?
-  email       String?
-  address     String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  gstin     String?
+  phone     String?
+  email     String?
+  address   String?
+  createdAt DateTime @default(now())
 }
 
 model Vendor {
-  id          String   @id @default(cuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  name        String
-  gstin       String?
-  phone       String?
-  email       String?
-  address     String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  gstin     String?
+  phone     String?
+  email     String?
+  address   String?
+  createdAt DateTime @default(now())
 }
 
 model InventoryItem {
-  id              String   @id @default(cuid())
-  sku             String   @unique
-  name            String
-  category        String
-  itemType        String   // trading or service/rental
-  unitPrice       Float?
-  costPrice       Float?
-  serialNumber    String?
-  warehouse       String?
-  active          Boolean  @default(true)
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  tenantId     String?
+  sku          String   @unique
+  name         String
+  category     String
+  itemType     String
+  unitPrice    Float?
+  costPrice    Float?
+  serialNumber String?
+  warehouse    String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
 }
 
 model LedgerAccount {
@@ -77,49 +76,67 @@ model LedgerAccount {
 }
 
 model LedgerEntry {
-  id              String   @id @default(cuid())
-  entryType       String
-  documentType    String?
-  documentId      String?
-  accountCode     String
-  debit           Float    @default(0)
-  credit          Float    @default(0)
-  gstTaxType      String?
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  tenantId     String?
+  documentType String?
+  documentId   String?
+  accountCode  String
+  debit        Float    @default(0)
+  credit       Float    @default(0)
+  description  String?
+  createdAt    DateTime @default(now())
 }
 
 model ServiceTicket {
-  id              String   @id @default(cuid())
-  ticketNumber    String   @unique
-  customerName    String
-  siteAddress     String?
-  issueSummary    String
-  priority        String
-  status          String
-  engineerName    String?
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  tenantId     String?
+  ticketNumber String   @unique
+  customerName String
+  siteAddress  String?
+  issueSummary String
+  priority     String
+  status       String
+  engineerName String?
+  createdAt    DateTime @default(now())
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  invoiceType   String
+  invoiceNumber String
+  customerName  String?
+  vendorName    String?
+  date          DateTime
+  taxableValue  Float
+  gstValue      Float
+  total         Float
+  status        String   @default("draft")
+  createdAt     DateTime @default(now())
 }
 
 model GSTRReport {
-  id              String   @id @default(cuid())
-  reportType      String   // GSTR-1, GSTR-2B, GSTR-3B
-  period          String
-  status          String
-  filePath        String?
-  generatedAt     DateTime @default(now())
+  id          String   @id @default(cuid())
+  tenantId    String?
+  reportType  String
+  period      String
+  status      String
+  filePath    String?
+  generatedAt DateTime @default(now())
 }
 
 model OCRInvoiceDraft {
-  id              String   @id @default(cuid())
-  source          String
-  vendorName      String?
-  gstin           String?
-  invoiceNumber   String?
-  invoiceDate     DateTime?
-  taxableValue    Float?
-  gstAmount       Float?
-  total           Float?
-  status          String   @default("pending-review")
-  createdAt       DateTime @default(now())
+  id            String   @id @default(cuid())
+  tenantId      String?
+  source        String
+  vendorName    String?
+  gstin         String?
+  invoiceNumber String?
+  invoiceDate   DateTime?
+  taxableValue  Float?
+  gstAmount     Float?
+  total         Float?
+  status        String   @default("pending-review")
+  createdAt     DateTime @default(now())
 }
-```

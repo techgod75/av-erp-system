@@ -1,147 +1,116 @@
 # AV ERP System
 
-A lean, cost-effective ERP/CRM system tailored for Audio-Visual trading and services businesses operating in India.
+A lean, cost-effective ERP/CRM starting point tailored for Audio-Visual trading, rental operations, service management, and GST-aware accounting for Indian businesses.
 
-This repository is a practical starter architecture for a deployment that prioritizes:
+## What is included
 
-- Open-source software and self-hosted tooling
-- Minimal recurring software costs
-- Fast mobile-first workflows in a PWA UI
-- GST-aware ledger accounting and reporting
-- Service ticket and AMC operations for AV installations and rentals
-- OCR-based vendor invoice intake with low-cost fallback AI processing
+- AV inventory domain for trading and rental/service items
+- Sales and purchase workflows
+- Double-entry ledger posting engine
+- GST report generation (GSTR-1, GSTR-2B, GSTR-3B)
+- OCR-based vendor invoice draft flow
+- GSTIN lookup-ready module design
+- Multi-role RBAC access model
+- Progressive web app dashboard for mobile and desktop
+- API-first architecture ready for real deployment
 
-## Product vision
+## Architecture
 
-The platform is designed for AV businesses handling:
-
-- Trading inventory: projectors, LED walls, line arrays, microphones, mixers, cables, accessories
-- Service/rental inventory: equipment checked in/out for events, tours, rentals, and site installs
-- AMC and service support: tickets, engineer assignments, site reports, repair status tracking
-- Commercial workflow: quotation, sales order, pro forma, tax invoice, payment receipt, bank reconciliation
-- Finance: automated accounting ledger entries, GST liability, input tax credit reconciliation
-
-## Recommended architecture
-
-### Core stack
-
-- Frappe/ERPNext (preferred for operational ERP + Indian accounting + GST workflows)
--or-
-- Next.js + Express/NestJS + PostgreSQL + Prisma + TailwindCSS for a custom, lightweight, low-cost SaaS stack
-
-### Why this stack
-
-- Can run on a single VPS (
-  $5–$10/month in DigitalOcean, Hetzner, or AWS Lightsail)
-- Keeps dependency cost low by using open-source and free-tier services
-- Enables a mobile-first PWA without native app store deployment
-- Keeps custom logic manageable for GST/legal compliance and integration-specific workflows
-
-## Repository structure
-
-- `apps/web` – progressive web app frontend built with Next.js + Tailwind
-- `apps/api` – lightweight API service and business logic layer
-- `packages/db` – Prisma schema for PostgreSQL domain model
-- `docs/` – domain design, accounting logic, GST plan, MVP roadmap
-
-## Module blueprint
-
-### 1. Sales & inventory
-- Customer master
-- Vendor master
-- Product catalog with item type: trading vs service/rental
-- Stock tracking by warehouse/site
-- Serial-number and equipment availability tracking
-
-### 2. Accounting engine
-- Automated double-entry ledger posting for:
-  - quotation to sales order to invoice
-  - purchase order to purchase invoice
-  - receipt and expense vouchers
-- Real-time cash and bank balances
-- Indian ledger account mapping for GST and taxation flows
-
-### 3. GST & compliance
-- GSTR-1, GSTR-2 / 2B reconciliation, GSTR-3B summary
-- Excel and JSON export matching GST offline tool expectations
-- GSTIN-driven customer/vendor master enrichment
-
-### 4. Service operations
-- Service tickets with SLA statuses
-- AMC contracts
-- Engineer allocation and work log tracking
-- On-site report capture and part replacements
-
-### 5. Invoice OCR
-- Mobile and web invoice upload using camera or file
-- Local OCR using Tesseract.js or lightweight Python OCR backend
-- Fallback LLM interpretation for failed extractions
-- Draft purchase invoice generation for review and approval
-
-## MVP roadmap
-
-### Phase 1 – Foundation
-- Tenant-ready RBAC
-- Product & customer/vendor masters
-- Inventory + stock ledger
-- Quotations and sales orders
-
-### Phase 2 – Finance automation
-- General ledger posting engine
-- Vendor invoice intake
-- GST tax code mapping
-- Excel and JSON GST export
-
-### Phase 3 – Service ops
-- Service tickets and engineer assignment
-- Rental availability tracking
-- AMC modules and site reports
-
-### Phase 4 – Optimization
-- GSTIN lookups and master enrichment
-- PWA polish, offline support, mobile UX
-- Reporting dashboards and audit trails
+- Frontend: Next.js + TailwindCSS + PWA-ready UI
+- API: Node.js + Express + TypeScript
+- Database: PostgreSQL (Prisma-ready schema included)
+- Storage: local file system or S3-compatible storage for documents
+- Hosting: single VPS deployment with PostgreSQL and Nginx
 
 ## Quick start
 
-### Prerequisites
-- Node.js 20+
-- npm 10+
-- PostgreSQL 15+
-
-### Setup
+### 1. Install dependencies
 
 ```bash
 npm install
+```
+
+### 2. Configure environment
+
+```bash
 cp .env.example .env
+```
+
+### 3. Run the app
+
+```bash
 npm run dev
 ```
 
-### Docker setup
+This starts:
+- API on http://localhost:4000
+- Web app on http://localhost:3000
 
-```bash
-docker-compose up -d
-```
+## Key modules
 
-## Security and governance
+### Inventory and sales
+- Customer master
+- Vendor master
+- Inventory items with trading and rental/service flags
+- Quote to invoice flow
+- Tax invoice generation with GST split
 
-- RBAC by role, tenant, and module
-- Restricted access to banking, vendor pricing, taxes, and settings
-- Audit trails for edits and financial posting
-- Manual approval gates for invoice OCR and ledger drafts
+### Financial engine
+- Ledger account structure
+- Real-time posting rules
+- Cash/bank and debtor/creditor balances
+- Journal entries and audit trail
 
-## Important recommendation
+### GST and compliance
+- GSTR-1 outward summary
+- GSTR-2 / 2B reconciliation support
+- GSTR-3B monthly summary payload
+- Excel and JSON export-ready data
 
-For a business needing fast deployment with compliance coverage, the best choice is usually:
+### Service operations
+- Service tickets
+- AMC tracking
+- Engineer allocation
+- Site reports
 
-1. Use Frappe/ERPNext for the accounting and compliance core if the team values a mature Indian accounting model.
-2. Use a custom Next.js + PostgreSQL stack when a more tailored AV workflow, lower lock-in, and lighter deployment are the priority.
+### OCR intake
+- Vendor invoice upload flow
+- OCR extraction with local fallback
+- Low-cost LLM fallback for low-confidence extraction
+- Draft purchase invoice creation for review
 
-This repository intentionally favors the custom Next.js approach because it is easier to version, extend, and tailor to AV-specific workflows.
+## Recommended deployment stack
 
-## Contribution
+- 1 VPS, 2 vCPU, 4 GB RAM is enough for MVP workloads
+- PostgreSQL on the same machine or nearby managed instance
+- Nginx for reverse proxy
+- PM2 or systemd for process management
+- Optional Redis for queueing or cache
 
-This is an MVP starter repository. It is designed to be extended by a product team with ERP logic, compliance modules, and lifecycle workflows specific to your industry.
+## Core business logic summary
+
+### Sales invoice posting
+- Debtor A/c Dr
+- Sales A/c Cr
+- CGST/SGST or IGST Output A/c Cr
+
+### Purchase invoice posting
+- Inventory or Expense A/c Dr
+- Input GST A/c Dr
+- Creditor A/c Cr
+
+### Role access summary
+- Admin: full access and deletion rights
+- Sales: quotations and stock visibility only
+- Technician: service execution only
+- Accountant: invoice validation and GST reports only
+
+## Files in this repo
+
+- `apps/api`: Express API with domain logic and demo data
+- `apps/web`: Next.js front-end for dashboard and operations
+- `packages/db/prisma/schema.prisma`: PostgreSQL schema blueprint
+- `docs/`: functional domain and GST planning documents
 
 ## License
 
