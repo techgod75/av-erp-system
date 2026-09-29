@@ -100,6 +100,14 @@ type OCRInvoiceDraft = {
   status: 'pending-review' | 'approved';
 };
 
+type Quote = {
+  id: string;
+  customerName: string;
+  total: number;
+  status: 'draft' | 'sent' | 'accepted';
+  createdAt: string;
+};
+
 const customers: Customer[] = [
   {
     id: 'CUST-1001',
@@ -166,11 +174,66 @@ const inventoryItems: InventoryItem[] = [
     warehouse: 'Rental Pool',
     availableQty: 12,
   },
+  {
+    id: 'INV-04',
+    sku: 'MIC-USB',
+    name: 'Wireless Conference Microphone',
+    category: 'Audio',
+    itemType: 'trading',
+    unitPrice: 48000,
+    costPrice: 33000,
+    warehouse: 'Bengaluru WH-1',
+    availableQty: 18,
+  },
+];
+
+const quotes: Quote[] = [
+  {
+    id: 'Q-1001',
+    customerName: 'SoundWorks Eventz',
+    total: 742000,
+    status: 'sent',
+    createdAt: '2026-09-15',
+  },
+  {
+    id: 'Q-1002',
+    customerName: 'Apex Corporate Hall',
+    total: 195000,
+    status: 'accepted',
+    createdAt: '2026-09-20',
+  },
 ];
 
 const ledgerEntries: LedgerEntry[] = [];
-const taxInvoices: TaxInvoice[] = [];
-const purchaseInvoices: PurchaseInvoice[] = [];
+const taxInvoices: TaxInvoice[] = [
+  {
+    id: 'INV-S-9001',
+    customerId: 'CUST-1001',
+    customerName: 'SoundWorks Eventz',
+    invoiceNumber: 'TS-9001',
+    date: '2026-09-15',
+    taxableValue: 500000,
+    gstRate: 18,
+    gstType: 'CGST+SGST',
+    gstValue: 90000,
+    total: 590000,
+    status: 'approved',
+  },
+];
+const purchaseInvoices: PurchaseInvoice[] = [
+  {
+    id: 'INV-P-8001',
+    vendorId: 'VEND-2001',
+    vendorName: 'Elite AV Supplies',
+    invoiceNumber: 'TP-8001',
+    date: '2026-09-16',
+    taxableValue: 350000,
+    gstRate: 18,
+    gstValue: 63000,
+    total: 413000,
+    status: 'approved',
+  },
+];
 const serviceTickets: ServiceTicket[] = [
   {
     id: 'ST-0001',
@@ -182,11 +245,35 @@ const serviceTickets: ServiceTicket[] = [
     status: 'Assigned',
     engineerName: 'Arun Kumar',
   },
+  {
+    id: 'ST-0002',
+    ticketNumber: 'AV-1002',
+    customerName: 'Apex Corporate Hall',
+    siteAddress: 'Mumbai',
+    issueSummary: 'Mixer fails after power fluctuation',
+    priority: 'Critical',
+    status: 'In Progress',
+    engineerName: 'Rohit Shetty',
+  },
 ];
-const ocrDrafts: OCRInvoiceDraft[] = [];
+const ocrDrafts: OCRInvoiceDraft[] = [
+  {
+    id: 'OCR-01',
+    source: 'camera-upload',
+    vendorName: 'Elite AV Supplies',
+    gstin: '29PQRST1234F1Z6',
+    invoiceNumber: 'OCR-2026-041',
+    invoiceDate: '2026-09-18',
+    taxableValue: 220000,
+    gstAmount: 39600,
+    total: 259600,
+    status: 'pending-review',
+  },
+];
 
 function calculateGST(taxableValue: number, gstRate: number, mode: GSTMode) {
   const gstValue = (taxableValue * gstRate) / 100;
+
   if (mode === 'intra') {
     return {
       gstType: 'CGST+SGST' as const,
@@ -436,6 +523,25 @@ app.post('/api/inventory', (req: Request, res: Response) => {
 
   inventoryItems.push(item);
   res.status(201).json(item);
+});
+
+app.get('/api/quotes', (_req: Request, res: Response) => {
+  res.json(quotes);
+});
+
+app.post('/api/quotes', (req: Request, res: Response) => {
+  const payload = req.body ?? {};
+
+  const quote: Quote = {
+    id: `Q-${Date.now()}`,
+    customerName: payload.customerName ?? 'New Customer',
+    total: Number(payload.total ?? 0),
+    status: payload.status ?? 'draft',
+    createdAt: new Date().toISOString().slice(0, 10),
+  };
+
+  quotes.push(quote);
+  res.status(201).json(quote);
 });
 
 app.get('/api/service-tickets', (_req: Request, res: Response) => {
